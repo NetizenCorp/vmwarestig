@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+import paramiko
+
 from stig_report import stig_report
 
 class esxi_stig(object):
@@ -13,6 +15,32 @@ class esxi_stig(object):
         self.esxi_username = None
         self.esxi_password = None
         self.vcenter_log = None
+
+    def ssh_connect(self):
+        self.p_transport = paramiko.Transport((self.esxi_server, 22))
+        self.p_transport.connect(username=self.esxi_username, password=self.esxi_password)
+
+    def ssh_command(self, command):
+        nbytes = 4096
+        stdout_data = []
+        stderr_data = []
+        session = self.p_transport.open_channel(kind='session')
+        session.exec_command(command)
+        while True:
+            if session.recv_ready():
+                stdout_data.append(session.recv(nbytes))
+            if session.recv_stderr_ready():
+                stderr_data.append(session.recv_stderr(nbytes))
+            if session.exit_status_ready():
+                break
+
+        #print 'exit status: ', session.recv_exit_status()
+        return ''.join(stdout_data)
+        #print ''.join(stderr_data)
+        session.close()
+
+    def ssh_close(self):        
+        self.p_transport.close()
 
     def esxi_connect(self):
         COMMAND_LINE = 'powershell'
@@ -41,17 +69,32 @@ class esxi_stig(object):
         out = self.powershell.communicate()[0]
         return(out)
 
-    def esxi_run(self):
-
-        #e = esxi_stig()
-        #e.esxi_server = "10.0.2.5"
-        #e.esxi_username = "root"
-        #e.esxi_password = "Free$411"
-
-        s = stig_report()
-
-        self.esxi_connect()
+    def esxi_ssh_shell(self, mode):
+        COMMAND_LINE = 'powershell'
+        self.powershell = subprocess.Popen(COMMAND_LINE, shell=True,
+                                           stdin=subprocess.PIPE,
+                                           stderr=subprocess.STDOUT,
+                                           stdout=subprocess.PIPE)
+        self.output = self.powershell.stdout.readline()
         
+        passed_command = 'Get-VMHost | Foreach {Start-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM-SSH"})'
+        self.esxi_command(passed_command)
+        self.output = self.powershell.stdout.readline()
+        out = self.powershell.communicate()[0]
+
+    def esxi_run(self):
+        print ("Start")
+        self.esxi_connect()
+        #s = stig_report()
+       
+        vuln_num = 'V-None'
+        cat_num = 'None'
+        passed_command = 'Get-VMHost | Foreach {Start-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM-SSH"} )}\n\r'
+        self.esxi_command(passed_command)
+
+        passed_command = 'Get-VMHost | Foreach {Start-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM"} )}\n\r'
+        self.esxi_command(passed_command)
+
         vuln_num = 'V-63147'
         cat_num = 'CAT II'
         passed_command = 'Get-VMHost | Select Name,@{N="Lockdown";E={$_.Extensiondata.Config.LockdownMode}}'
@@ -95,40 +138,17 @@ class esxi_stig(object):
         passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Config.Etc.issue'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
-        #2
-        vuln_num = 'V-63187'
-        vuln_num = 'V-63189'
-        vuln_num = 'V-63191'
-        vuln_num = 'V-63193'
-        vuln_num = 'V-63195'
-        vuln_num = 'V-63197'
-        vuln_num = 'V-63199'
-        vuln_num = 'V-63201'
-        vuln_num = 'V-63203'
-        vuln_num = 'V-63205'
-        vuln_num = 'V-63207'
-        vuln_num = 'V-63209'
-        vuln_num = 'V-63211'
-        vuln_num = 'V-63213'
-        vuln_num = 'V-63215'
-        vuln_num = 'V-63217'
-        vuln_num = 'V-63219'
-        vuln_num = 'V-63221'
-        vuln_num = 'V-63223'
-        vuln_num = 'V-63225'
-        vuln_num = 'V-63227'
         vuln_num = 'V-63229'
-        #needs to ssh into esxi
-
-        vuln_num = 'V-63231'
-        cat_num = 'CAT II'
-        passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Security.PasswordQualityControl'
+        cat_num = 'CAT III'
+        passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Config.HostAgent.log.level'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
-        vuln_num = 'V-63233'
-        vuln_num = 'V-63235'
-        #needs to ssh into esxi
+        #vuln_num = 'V-63231'
+        #cat_num = 'CAT II'
+        #passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Security.PasswordQualityControl'
+        #self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+       
         vuln_num = 'V-63237'
         cat_num = 'CAT II'
         passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Config.HostAgent.plugins.solo.enableMob'
@@ -296,10 +316,6 @@ class esxi_stig(object):
                 print p.split('$$$$$$$$')[0].split('|')[1]
                 print ""
 
-        #e.esxi_server = "10.0.2.5"
-        #e.esxi_username = "root"
-        #e.esxi_password = "Free$411"
-
         self.esxi_connect()
         #5
 
@@ -454,10 +470,6 @@ class esxi_stig(object):
                 print p.split('$$$$$$$$')[0].split('|')[1]
                 print ""
 
-        #e.esxi_server = "10.0.2.5"
-        #e.esxi_username = "root"
-        #e.esxi_password = "Free$411"
-
         self.esxi_connect()
 
 
@@ -490,6 +502,7 @@ class esxi_stig(object):
         passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Security.PasswordQualityControl'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+
         '''
         vuln_num = 'V-73135'
         cat_num = 'CAT III'
@@ -497,11 +510,7 @@ class esxi_stig(object):
         e.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
         '''
 
-
-
-        #print e.esxi_close()
-
-
+        
         for p in self.esxi_close().split('########'):
             if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
                 #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
@@ -513,4 +522,160 @@ class esxi_stig(object):
                 print p.split('$$$$$$$$')[0].split('|')[1]
                 print ""
         #s.close_report()
-        self.vcenter_log.close() 
+
+        self.esxi_ssh_shell('start')
+
+        #self.ssh_connect()
+        #self.ssh_command('grep -i "^Ciphers" /etc/ssh/sshd_config')
+        #self.ssh_command('ls')
+        #self.ssh_close()
+
+        
+
+        #2
+        self.ssh_connect()
+        vuln_num = 'V-63187'        
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^Banner" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        #self.ssh_close
+
+        #self.ssh_connect()
+        vuln_num = 'V-63189'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^Ciphers" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        #
+        
+        vuln_num = 'V-63191'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^Protocol" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63193'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^IgnoreRhosts" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63195'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^HostbasedAuthentication" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+
+        vuln_num = 'V-63197'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^PermitRootLogin" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63199'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^PermitEmptyPasswords" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63201'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^PermitUserEnvironment" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+
+        
+        vuln_num = 'V-63203'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^MACs" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63205'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^GSSAPIAuthentication" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63207'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^KerberosAuthentication" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+                
+        vuln_num = 'V-63209'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^StrictModes" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        
+        vuln_num = 'V-63211'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^Compression" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63213'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^GatewayPorts" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63215'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^X11Forwarding" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63217'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^AcceptEnv" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+                
+        vuln_num = 'V-63219'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^PermitTunnel" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63221'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^ClientAliveCountMax" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63223'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^ClientAliveInterval" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63225'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^MaxSessions" /etc/ssh/sshd_config') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63227'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('cat /etc/ssh/keys-root/authorized_keys') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+        
+        vuln_num = 'V-63229'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('cat /etc/ssh/keys-root/authorized_keys') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+
+        vuln_num = 'V-63233'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^password" /etc/pam.d/passwd | grep sufficient') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+
+        vuln_num = 'V-63235'
+        self.vcenter_log.write('########\n\r')
+        self.vcenter_log.write(vuln_num + '\n\r' + self.ssh_command('grep -i "^password" /etc/pam.d/passwd | grep sufficient') + "\n\r")
+        self.vcenter_log.write('########\n\r\n\r')
+
+        self.ssh_close
+
+        print ("SSH Close")
+
+
+        self.esxi_connect()
+
+        passed_command = 'Get-VMHost | Foreach {Stop-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM-SSH"} )}\n\r'
+        self.esxi_command(passed_command)
+
+        passed_command = 'Get-VMHost | Foreach {Stop-VMHostService -HostService ($_ | Get-VMHostService | Where { $_.Key -eq "TSM"} )}\n\r'
+        self.esxi_command(passed_command)
+
+        self.esxi_close()
+
+        self.vcenter_log.close()
+
+        print "Done"
+        
+      

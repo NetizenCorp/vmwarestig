@@ -43,6 +43,8 @@ class esxi_vcenter():
         print 
         self.esxi_connect()
 
+        print ("Start esxi")
+
         self.esxi_command("Write-Output '########'")
 
         vuln_num = 'V-63949'
