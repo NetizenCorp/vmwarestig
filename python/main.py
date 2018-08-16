@@ -65,8 +65,9 @@ class MyFirstGUI:
         esxi_button_close = Button(master, text="Close", command=self.master.destroy)
         esxi_button_close.place(x=70, y=185)
 
-        note_label = Label(master, text = "Note: Following setting are required.\nPowershell: \nSet-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted\nESXi:\n" +
-                           "ssh and esxi shell are running.")
+        note_label = Label(master, text = "Note: The software will try to set the following settings that are required.\nPowershell: \nSet-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted\nESXi:\n" +
+                           "ssh and esxi shell are running.\n" +
+                           "Depending on your ESXi license, you might have to turn on ssh manually!")
         note_label.place (x=0, y=250, anchor="w" )
 
     def run_vsphere(self):
