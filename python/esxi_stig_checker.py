@@ -112,6 +112,19 @@ class esxi_stig(object):
                           '$lockdown.QueryLockdownExceptions()')
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
     
         #1
         vuln_num = 'V-63177'
@@ -175,6 +188,20 @@ class esxi_stig(object):
         passed_command = 'Get-VMHost | Select Name, @{N="HostProfile";E={$_ | Get-VMHostProfile}}, @{N="JoinADEnabled";E={($_ | Get-VmHostProfile).ExtensionData.Config.ApplyProfile.Authentication.ActiveDirectory.Enabled}}, @{N="JoinDomainMethod";E={(($_ | Get-VMHostProfile).ExtensionData.Config.ApplyProfile.Authentication.ActiveDirectory | Select -ExpandProperty Policy | Where {$_.Id -eq "JoinDomainMethodPolicy"}).Policyoption.Id}}'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
 
         vuln_num = 'V-63247'
         cat_num = 'CAT III'
@@ -280,6 +307,20 @@ class esxi_stig(object):
 
         #4
 
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
+
         vuln_num = 'V-63287'
         cat_num = 'CAT II'
         passed_command = 'Get-VirtualPortGroup | Get-SecurityPolicy'
@@ -367,6 +408,20 @@ class esxi_stig(object):
 
         #6
 
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
+
         vuln_num = 'V-63531'
         cat_num = 'CAT II'
         passed_command = 'Get-VMHost | Get-AdvancedSetting -Name Security.PasswordQualityControl'
@@ -398,6 +453,19 @@ class esxi_stig(object):
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
         #7
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
 
         vuln_num = 'V-63777'
         cat_num = 'CAT II'
@@ -450,6 +518,19 @@ class esxi_stig(object):
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
         #8
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
 
 
         vuln_num = 'V-63901'
