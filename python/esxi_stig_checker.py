@@ -112,6 +112,7 @@ class esxi_stig(object):
                           '$lockdown.QueryLockdownExceptions()')
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+    
         #1
         vuln_num = 'V-63177'
         cat_num = 'CAT II'
@@ -216,6 +217,20 @@ class esxi_stig(object):
         passed_command = 'Get-VMHost | Get-VMHostNTPServer'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+        for p in self.esxi_close().split('########'):
+            if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
+                #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
+                self.vcenter_log.write('########\n\r')
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[0] + "\n\r")
+                self.vcenter_log.write(p.split('$$$$$$$$')[0].split('|')[1] + "\n\r")
+                self.vcenter_log.write('########\n\r\n\r')
+                print p.split('$$$$$$$$')[0].split('|')[0]
+                print p.split('$$$$$$$$')[0].split('|')[1]
+                print ""
+
+        
+        self.esxi_connect()
+
         #3
 
         vuln_num = 'V-63261'
@@ -305,6 +320,8 @@ class esxi_stig(object):
         passed_command = 'Get-VirtualPortGroup | Select Name, VLanID'
         self.esxi_command("Write-Output '########';Write-Output '" + vuln_num + " |';" + passed_command + ";Write-Output '$$$$$$$$'\n\r")
 
+        
+
         for p in self.esxi_close().split('########'):
             if ("V-" in p and not "Get-" in p) or ("The requested operation" in p):
                 #s.write_row(p.split('$$$$$$$$')[0].split('|')[0].strip(), p.split('$$$$$$$$')[0].split('|')[1].strip())
@@ -316,6 +333,7 @@ class esxi_stig(object):
                 print p.split('$$$$$$$$')[0].split('|')[1]
                 print ""
 
+        
         self.esxi_connect()
         #5
 
@@ -675,7 +693,7 @@ class esxi_stig(object):
         self.esxi_close()
 
         self.vcenter_log.close()
-
+        
         print "Done"
         
       
