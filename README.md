@@ -1,4 +1,6 @@
 # vmwarestig
+Ignore the vb.net 
+
 VMWare STIG Checker for ESXi and vCenter Appliance.
 
 This a beta (proof of concept) to integrate python and powerCLI to perform STIG checks by only supplying the IP, Username, and Password.  
@@ -8,4 +10,5 @@ Instruction:
 
 Unzip Vmware_STIG_Checker_App and run the bat file.  If a Microsoft message pops up, choose to run anyway.
 The output will be a text file in the same directory as bat file that was ran.
+
 
